@@ -2,6 +2,7 @@
 #include <linux/sched.h>
 #include "hooks.h"
 #include "sys_hook.h"
+//#include "netlink.h"
 
 extern struct sys_hook *lkh_sys_hook;
 
@@ -23,6 +24,8 @@ execve_hook(const char *pathname, char *const argv[], char *const envp[])
     printk(KERN_ALERT "DEBUG: ExecVE Hook\n");
     printk(KERN_ALERT "DEBUG: ExecVE params: pathname: %s, argv: %s, envp: %s \n", pathname, argv, envp); // TODO: Print the argument with a loop or something, right now it's all wrong
     printk(KERN_ALERT "DEBUG: ExecVE pid: %d\n", (int) task_pid_nr(current));
+
+//    send_to_user("Hi");
     
     sys_execve_t sys_execve;
     

@@ -5,6 +5,8 @@
 #include <linux/string.h>
 #include "sys_hook.h"
 #include "hooks.h"
+#include "netlink.h"
+#include <linux/delay.h>
 
 struct sys_hook *lkh_sys_hook;
 
@@ -66,9 +68,15 @@ module_entry(void)
         return 1;
     }
 
-    sys_hook_add64(lkh_sys_hook, __NR_mkdir, (void *)mkdir_hook);
-    sys_hook_add64(lkh_sys_hook, __NR_execve, (void *)execve_hook);
-    sys_hook_add64(lkh_sys_hook, __NR_connect, (void *)connect_hook);
+//    sys_hook_add64(lkh_sys_hook, __NR_mkdir, (void *)mkdir_hook);
+//    sys_hook_add64(lkh_sys_hook, __NR_execve, (void *)execve_hook);
+//    sys_hook_add64(lkh_sys_hook, __NR_connect, (void *)connect_hook);
+
+    createNetlink();
+    printk(KERN_INFO "Opened a netlink socket\n");
+
+    msleep(10000);
+    send_to_user("hi");
 
     printk(KERN_INFO "lkh loaded\n");
     return 0;
@@ -78,6 +86,7 @@ static void __exit
 module_cleanup(void)
 {
     sys_hook_free(lkh_sys_hook);
+    releaseNetlink();
     printk(KERN_INFO "lkh has finished\n");
 }
 

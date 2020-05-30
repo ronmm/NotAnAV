@@ -11,7 +11,7 @@ Description		:		Final Project
 #include <linux/delay.h>
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("YONATANINONAMIRORYOSI");
+MODULE_AUTHOR("NOT_AN_AV");
 
 int not_an_av_main_major=0;
 

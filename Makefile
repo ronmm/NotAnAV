@@ -8,8 +8,6 @@ PWD			:= $(shell pwd)
 
 modules:
 	make -C $(KERN_SRC) M=$(PWD) modules
-	make -C $(PWD)/Lime M=$(PWD) symbols
-	mv $(PWD)/Lime/lime.ko $(PWD)/lime.ko
 
 install:
 	make -C $(KERN_SRC) M=$(PWD) modules_install

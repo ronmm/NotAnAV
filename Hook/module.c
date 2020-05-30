@@ -68,15 +68,14 @@ module_entry(void)
         return 1;
     }
 
-//    sys_hook_add64(lkh_sys_hook, __NR_mkdir, (void *)mkdir_hook);
-//    sys_hook_add64(lkh_sys_hook, __NR_execve, (void *)execve_hook);
-//    sys_hook_add64(lkh_sys_hook, __NR_connect, (void *)connect_hook);
+    sys_hook_add64(lkh_sys_hook, __NR_mkdir, (void *)mkdir_hook);
+    sys_hook_add64(lkh_sys_hook, __NR_execve, (void *)execve_hook);
+    sys_hook_add64(lkh_sys_hook, __NR_connect, (void *)connect_hook);
 
-    createNetlink();
+    open_netlink();
     printk(KERN_INFO "Opened a netlink socket\n");
 
     msleep(10000);
-    send_to_user("hi");
 
     printk(KERN_INFO "lkh loaded\n");
     return 0;
@@ -86,7 +85,7 @@ static void __exit
 module_cleanup(void)
 {
     sys_hook_free(lkh_sys_hook);
-    releaseNetlink();
+    release_netlink();
     printk(KERN_INFO "lkh has finished\n");
 }
 
@@ -96,5 +95,5 @@ module_exit(module_cleanup);
 
 /* Shut up kernel warnings about tainted kernels due to non-free software */
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("github:jha");
-MODULE_DESCRIPTION("Linux Kernel Hook");
+MODULE_AUTHOR("not_an_av_group");
+MODULE_DESCRIPTION("Final Project");

@@ -5,6 +5,7 @@
 #include <linux/unistd.h>
 #include <linux/syscalls.h>
 #include "types.h"
+#include "netlink.h"
 
 typedef asmlinkage int (*sys_mkdir_t)(const char *, int);
 typedef asmlinkage int (*sys_execve_t)(const char *, char *const [], char *const []);

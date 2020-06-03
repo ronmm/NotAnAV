@@ -5,6 +5,8 @@
 #include <linux/string.h>
 #include "sys_hook.h"
 #include "hooks.h"
+#include "netlink.h"
+#include <linux/delay.h>
 
 struct sys_hook *lkh_sys_hook;
 
@@ -70,6 +72,11 @@ module_entry(void)
     sys_hook_add64(lkh_sys_hook, __NR_execve, (void *)execve_hook);
     sys_hook_add64(lkh_sys_hook, __NR_connect, (void *)connect_hook);
 
+    open_netlink();
+    printk(KERN_INFO "Opened a netlink socket\n");
+
+    msleep(10000);
+
     printk(KERN_INFO "lkh loaded\n");
     return 0;
 }
@@ -78,6 +85,7 @@ static void __exit
 module_cleanup(void)
 {
     sys_hook_free(lkh_sys_hook);
+    release_netlink();
     printk(KERN_INFO "lkh has finished\n");
 }
 
@@ -87,5 +95,5 @@ module_exit(module_cleanup);
 
 /* Shut up kernel warnings about tainted kernels due to non-free software */
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("github:jha");
-MODULE_DESCRIPTION("Linux Kernel Hook");
+MODULE_AUTHOR("not_an_av_group");
+MODULE_DESCRIPTION("Final Project");

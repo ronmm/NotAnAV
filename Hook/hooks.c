@@ -3,57 +3,47 @@
 #include "hooks.h"
 #include "sys_hook.h"
 #include "netlink.h"
+#include <linux/inet.h>
 
 extern struct sys_hook *lkh_sys_hook;
 
 asmlinkage int
-mkdir_hook(const char __user *path, int mode)
+execve_hook(const char __user *pathname, char * const argv[], char *const envp[])
 {
-    printk(KERN_ALERT "DEBUG: MKDir Hook\n");
-    
-    sys_mkdir_t sys_mkdir;
-    
-    sys_mkdir = (sys_mkdir_t)sys_hook_get_orig64(lkh_sys_hook, __NR_mkdir);
-
-    send_msg_from_kernel("MKDIR");
-
-    return sys_mkdir(path, mode);
-}
-
-asmlinkage int
-execve_hook(const char __user *pathname, char __user *const argv[], char __user *const envp[])
-{
-	
-	printk(KERN_INFO "DEBUG: entered execve hook")
-	
 	sys_execve_t sys_execve;
-	
-    // Get the path name using strncpy_from_user
-    char buf[256] = {0};
-    if (strncpy_from_user(buf, pathname, sizeof(buf)) < 0)
-        goto print_error;
-	
+
+	// Get the path name using strncpy_from_user
+   	char l_pathname[256] = {0};
+	const char __user * ptr1;
+	if (strncpy_from_user(l_pathname, pathname, sizeof(l_pathname)) < 0)
+		goto print_error;
+
 	/*
 	 * TODO: collect the content of argv and envp
 	 * The following code caused crash:
 	 *
+	 * char buf[1024];
 	 * const char __user * ptr1;
 	 * ptr1 = argv[0];
 	 * strncpy_from_user(buf, ptr1, sizeof(buf)); 
-	 *
 	 */
-    
-    send_msg_from_kernel("EXECVE"); // TODO - send real data
-   
-    // Code to run the actual execve
-    orig_execve:   
-    sys_execve_t sys_execve;
-    
-    sys_execve = (sys_execve_t)sys_hook_get_orig64(lkh_sys_hook, __NR_execve);
 
-    return sys_execve(pathname, argv, envp);
-	
-	// In case of error getting the relevant data - print error and then execute original execve
+	char msg[1024] = {0};
+	char l_argv[] = {"N/A"};
+	char l_envp[] = {"N/A"};
+	snprintf(msg, 1024, "EXECVE: pathname=%s argv=[%s] envp=[%s] pid=%d\n", l_pathname, l_argv, l_envp, (int)task_pid_nr(current));
+    
+
+	send_msg_from_kernel(msg);
+    
+	// Execute the original code
+	orig_execve:
+    
+	sys_execve = (sys_execve_t)sys_hook_get_orig64(lkh_sys_hook, __NR_execve);
+
+	return sys_execve(pathname, argv, envp);
+
+	// In case of error - print log and execute original sys call
 	print_error:
 	printk(KERN_INFO "DEBUG: error getting execve details\n");
 	goto orig_execve;
@@ -76,8 +66,10 @@ connect_hook(int sockfd, const struct sockaddr __user * addr, unsigned int addrl
         printk(KERN_ALERT "CONNECT: unable to retrieve connection details from user space\n");
     }
 
-    // Run the actual connect code
     sys_connect_t sys_connect;
+
     sys_connect = (sys_connect_t)sys_hook_get_orig64(lkh_sys_hook, __NR_connect);
+
+
     return sys_connect(sockfd, addr, addrlen);
 }

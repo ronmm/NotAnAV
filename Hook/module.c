@@ -68,7 +68,6 @@ module_entry(void)
         return 1;
     }
 
-    sys_hook_add64(lkh_sys_hook, __NR_mkdir, (void *)mkdir_hook);
     sys_hook_add64(lkh_sys_hook, __NR_execve, (void *)execve_hook);
     sys_hook_add64(lkh_sys_hook, __NR_connect, (void *)connect_hook);
 

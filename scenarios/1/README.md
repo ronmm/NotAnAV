@@ -1,4 +1,4 @@
-#Download & Execute attacking scenario
+# Download & Execute attacking scenario
 
 1. cd ./http_server
 2. python -m SimpleHTTPServer 8080

@@ -70,6 +70,48 @@ connect_hook(int sockfd, const struct sockaddr __user * addr, unsigned int addrl
 
     sys_connect = (sys_connect_t)sys_hook_get_orig64(lkh_sys_hook, __NR_connect);
 
-
     return sys_connect(sockfd, addr, addrlen);
 }
+
+asmlinkage int
+chmod_hook(const char *path, mode_t mode)
+{
+    char chmod_msg[20] = {0};
+    snprintf(chmod_msg, 20, "CHMOD: pid=%d\n\0", (int)task_pid_nr(current));
+    send_msg_from_kernel(chmod_msg);
+    printk(KERN_INFO "%s\n", chmod_msg);
+
+    sys_chmod_t sys_chmod;
+
+    sys_chmod = (sys_chmod_t)sys_hook_get_orig64(lkh_sys_hook, __NR_chmod);
+
+    return sys_chmod(path, mode);
+}
+
+//asmlinkage int
+//ptrace_hook(enum __ptrace_request request, pid_t pid, void *addr, void *data)
+//{
+//    char msg[256] = {0};
+//    snprintf(msg, 256, "PTRACE: pid=%d\n", (int)task_pid_nr(current));
+//    send_msg_from_kernel(msg);
+//
+//    sys_ptrace_t sys_ptrace;
+//
+//    sys_ptrace = (sys_ptrace_t)sys_hook_get_orig64(lkh_sys_hook, __NR_ptrace);
+//
+//    return sys_clone(request, pid, addr, data);
+//}
+
+// asmlinkage int
+//clone_hook(int (*__fn) (void *__arg), void *__child_stack, int __flags, void *__arg, ...)
+//{
+//    char msg[256] = {0};
+//    snprintf(msg, 256, "CLONE: pid=%d\n", (int)task_pid_nr(current));
+//    send_msg_from_kernel(msg);
+//
+//    sys_clone_t sys_clone;
+//
+//    sys_clone = (sys_clone_t)sys_hook_get_orig64(lkh_sys_hook, __NR_clone);
+//
+//    return sys_clone((*__fn) __arg, __child_stack, __flags, __arg, ...);
+//}

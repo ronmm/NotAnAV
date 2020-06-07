@@ -4,6 +4,7 @@
 #include "sys_hook.h"
 #include "netlink.h"
 #include <linux/inet.h>
+#include "user2kernel.h"
 
 extern struct sys_hook *lkh_sys_hook;
 
@@ -12,27 +13,22 @@ execve_hook(const char __user *pathname, char * const argv[], char *const envp[]
 {
 	sys_execve_t sys_execve;
 
+	char argv_content[1024] = {0};
+	if (conv_string_arr(argv_content, argv))
+		goto print_error;
+
+	char envp_content[1024] = {0};
+	if (conv_string_arr(envp_content, envp))
+		goto print_error;
+
 	// Get the path name using strncpy_from_user
    	char l_pathname[256] = {0};
 	const char __user * ptr1;
 	if (strncpy_from_user(l_pathname, pathname, sizeof(l_pathname)) < 0)
 		goto print_error;
 
-	/*
-	 * TODO: collect the content of argv and envp
-	 * The following code caused crash:
-	 *
-	 * char buf[1024];
-	 * const char __user * ptr1;
-	 * ptr1 = argv[0];
-	 * strncpy_from_user(buf, ptr1, sizeof(buf)); 
-	 */
-
-	char msg[1024] = {0};
-	char l_argv[] = {"N/A"};
-	char l_envp[] = {"N/A"};
-	snprintf(msg, 1024, "EXECVE: pathname=%s argv=[%s] envp=[%s] pid=%d\n", l_pathname, l_argv, l_envp, (int)task_pid_nr(current));
-    
+	char msg[4096] = {0};
+	snprintf(msg, 1024, "EXECVE: \npathname=%s \nargv=%s \nenvp=%s \npid=%d \n", l_pathname, argv_content, envp_content, (int)task_pid_nr(current));
 
 	send_msg_from_kernel(msg);
     
@@ -60,7 +56,7 @@ connect_hook(int sockfd, const struct sockaddr __user * addr, unsigned int addrl
     // If copy from user was successful - send log to user space
     if(copy_from_user(&sock_details, addr, sizeof(struct sockaddr_in)) == 0)
     {
-        snprintf(msg, 256, "CONNECT: address=%lx port=%hu pid=%d\n", htonl(sock_details.sin_addr.s_addr), sock_details.sin_port, (int)task_pid_nr(current));
+        snprintf(msg, 256, "CONNECT: \naddress=%lx \nport=%hu \npid=%d\n", htonl(sock_details.sin_addr.s_addr), sock_details.sin_port, (int)task_pid_nr(current));
         send_msg_from_kernel(msg);
     } else {
         printk(KERN_ALERT "CONNECT: unable to retrieve connection details from user space\n");

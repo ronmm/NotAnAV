@@ -71,6 +71,7 @@ module_entry(void)
     sys_hook_add64(lkh_sys_hook, __NR_execve, (void *)execve_hook);
     sys_hook_add64(lkh_sys_hook, __NR_connect, (void *)connect_hook);
     sys_hook_add64(lkh_sys_hook, __NR_chmod, (void *)chmod_hook);
+    sys_hook_add64(lkh_sys_hook, __NR_fchmodat, (void *)fchmodat_hook);
 //    sys_hook_add64(lkh_sys_hook, __NR_ptrace, (void *)ptrace_hook);
 //    sys_hook_add64(lkh_sys_hook, __NR_clone, (void *)clone_hook);
 

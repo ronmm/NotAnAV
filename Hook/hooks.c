@@ -24,7 +24,7 @@ execve_hook(const char __user *pathname, char * const argv[], char *const envp[]
 	// Get the path name using strncpy_from_user
    	char l_pathname[256] = {0};
 	const char __user * ptr1;
-	if (strncpy_from_user(l_pathname, pathname, sizeof(l_pathname)) < 0)
+	if (strncpy_from_user(l_pathname, pathname, sizeof(l_pathname)) <= 0)
 		goto print_error;
 
 	char msg[4096] = {0};
@@ -82,6 +82,33 @@ chmod_hook(const char *path, mode_t mode)
     sys_chmod = (sys_chmod_t)sys_hook_get_orig64(lkh_sys_hook, __NR_chmod);
 
     return sys_chmod(path, mode);
+}
+
+asmlinkage int
+fchmodat_hook(int dirfd, const char *pathname, mode_t mode, int flags)
+{
+
+    sys_fchmodat_t sys_fchmodat;
+    char l_pathname[256] = {0};
+    if (strncpy_from_user(l_pathname, pathname, sizeof(l_pathname)) <= 0)
+        goto print_error;
+
+    char msg[1024] = {0};
+    snprintf(msg, 1024, "FCHMODAT: \npathname=%s \nmode=%3o \npid=%d",
+        l_pathname,
+        mode&0777,
+        (int)task_pid_nr(current));
+    
+    send_msg_from_kernel(msg);
+
+    orig_fchmodat:
+    sys_fchmodat = (sys_fchmodat_t)sys_hook_get_orig64(lkh_sys_hook, __NR_fchmodat);
+    return sys_fchmodat(dirfd, pathname, mode, flags);
+    
+    print_error:
+    printk(KERN_INFO "DEBUG: error getting fchmodat details\n");
+    goto orig_fchmodat;
+    
 }
 
 //asmlinkage int

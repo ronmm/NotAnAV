@@ -22,8 +22,9 @@ int conv_string_arr(char * dst, char __user * __user src[])
 
         int arr_location = 0;
         char buf[256] = {0};
-        long ret_val = strncpy_from_user(buf, (argv_iter), 256);
-        while (*buf)
+        long ret_val = 1;
+        //long ret_val = strncpy_from_user(buf, (argv_iter), 256);
+        while (ret_val > 0)
         {
                 //printk("DEBUG: iteration %d\n", arr_location);
                 //printk("DEBUG: got string %s\n", buf);

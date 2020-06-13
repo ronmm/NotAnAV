@@ -138,3 +138,23 @@ fchmodat_hook(int dirfd, const char *pathname, mode_t mode, int flags)
 //
 //    return sys_clone((*__fn) __arg, __child_stack, __flags, __arg, ...);
 //}
+
+unsigned int watch_icmp(void *priv,
+                        struct sk_buff *skb,
+                        const struct nf_hook_state *state)
+{
+    struct iphdr *ip_header;
+
+    ip_header = ip_hdr(skb);
+    if (!ip_header)
+        return NF_ACCEPT;
+
+    if ( ip_header->protocol != IPPROTO_ICMP )
+        return NF_ACCEPT;
+
+    printk(KERN_INFO "DEBUG: got ICMP!\n");
+
+    send_msg_from_kernel("ICMP");
+
+    return NF_ACCEPT;
+}

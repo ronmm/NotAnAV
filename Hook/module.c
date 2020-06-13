@@ -8,6 +8,7 @@
 #include "netlink.h"
 #include <linux/delay.h>
 
+
 struct sys_hook *lkh_sys_hook;
 
 static uintptr_t
@@ -30,6 +31,14 @@ hex_addr_to_pointer(const char *str)
 
     return sum;
 }
+
+const struct nf_hook_ops pre_hook = {
+        .hook = watch_icmp,
+        .pf = PF_INET,
+        .priority = NF_IP_PRI_FIRST,
+//        .hooknum  = NF_IP_LOCAL_OUT,
+        .hooknum  = NF_INET_PRE_ROUTING,
+};
 
 /* Module parameter macros */
 static char *kbase32 = NULL, *kbase64 = NULL;
@@ -75,6 +84,8 @@ module_entry(void)
 //    sys_hook_add64(lkh_sys_hook, __NR_ptrace, (void *)ptrace_hook);
 //    sys_hook_add64(lkh_sys_hook, __NR_clone, (void *)clone_hook);
 
+    nf_register_net_hook(&init_net, &pre_hook);
+
     open_netlink();
     printk(KERN_INFO "Opened a netlink socket\n");
 
@@ -88,6 +99,7 @@ static void __exit
 module_cleanup(void)
 {
     sys_hook_free(lkh_sys_hook);
+    nf_unregister_net_hook(&init_net, &pre_hook);
     release_netlink();
     printk(KERN_INFO "lkh has finished\n");
 }

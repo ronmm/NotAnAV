@@ -28,7 +28,15 @@ execve_hook(const char __user *pathname, char * const argv[], char *const envp[]
 		goto print_error;
 
 	char msg[4096] = {0};
-	snprintf(msg, 1024, "EXECVE: \npathname=%s \nargv=%s \nenvp=%s \npid=%d \n", l_pathname, argv_content, envp_content, (int)task_pid_nr(current));
+	snprintf(msg, 1024, "\"EXECVE\","
+			"\"pathname=%s\","
+			"\"argv=%s\","
+			//"\"envp=%s\","
+			"\"pid=%d\"",
+			l_pathname,
+			argv_content,
+			//envp_content,
+			(int)task_pid_nr(current));
 
 	send_msg_from_kernel(msg);
     
@@ -56,7 +64,13 @@ connect_hook(int sockfd, const struct sockaddr __user * addr, unsigned int addrl
     // If copy from user was successful - send log to user space
     if(copy_from_user(&sock_details, addr, sizeof(struct sockaddr_in)) == 0)
     {
-        snprintf(msg, 256, "CONNECT: \naddress=%lx \nport=%hu \npid=%d\n", htonl(sock_details.sin_addr.s_addr), sock_details.sin_port, (int)task_pid_nr(current));
+        snprintf(msg, 256, "\"CONNECT\","
+		"\"address=%lx\","
+		"\"port=%hu\","
+		"\"pid=%d\"",
+		htonl(sock_details.sin_addr.s_addr),
+		sock_details.sin_port,
+		(int)task_pid_nr(current));
         send_msg_from_kernel(msg);
     } else {
         printk(KERN_ALERT "CONNECT: unable to retrieve connection details from user space\n");
@@ -70,18 +84,32 @@ connect_hook(int sockfd, const struct sockaddr __user * addr, unsigned int addrl
 }
 
 asmlinkage int
-chmod_hook(const char *path, mode_t mode)
+chmod_hook(const char *pathname, mode_t mode)
 {
-    char chmod_msg[20] = {0};
-    snprintf(chmod_msg, 20, "CHMOD: pid=%d\n\0", (int)task_pid_nr(current));
-    send_msg_from_kernel(chmod_msg);
-    printk(KERN_INFO "%s\n", chmod_msg);
-
     sys_chmod_t sys_chmod;
+    char l_pathname[256] = {0};
+    if (strncpy_from_user(l_pathname, pathname, sizeof(l_pathname)) <= 0)
+        goto print_error;
+    
+    char msg[1024] = {0};
+    snprintf(msg, 1024, "\"CHMOD\","
+		"\"path=%s\","
+		"\"mode=%3o\","
+		"\"pid=%d\"",
+		l_pathname,
+		mode&0777,
+		(int)task_pid_nr(current));
 
+    send_msg_from_kernel(msg);
+
+    orig_chmod:
     sys_chmod = (sys_chmod_t)sys_hook_get_orig64(lkh_sys_hook, __NR_chmod);
 
-    return sys_chmod(path, mode);
+    return sys_chmod(l_pathname, mode);
+
+    print_error:
+    printk(KERN_INFO "DEBUG: error getting chmod details\n");
+    goto orig_chmod;
 }
 
 asmlinkage int
@@ -94,10 +122,13 @@ fchmodat_hook(int dirfd, const char *pathname, mode_t mode, int flags)
         goto print_error;
 
     char msg[1024] = {0};
-    snprintf(msg, 1024, "FCHMODAT: \npathname=%s \nmode=%3o \npid=%d",
-        l_pathname,
-        mode&0777,
-        (int)task_pid_nr(current));
+    snprintf(msg, 1024, "\"FCHMODAT\","
+		"\"path=%s\,"
+		"\"mode=%3o\","
+		"\"pid=%d\"",
+        	l_pathname,
+        	mode&0777,
+        	(int)task_pid_nr(current));
     
     send_msg_from_kernel(msg);
 

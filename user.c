@@ -5,6 +5,7 @@
 #include <linux/netlink.h>
 #include <errno.h>
 #include <unistd.h>
+#include "data_logger.h"
 
 #define NETLINK_USER 31
 #define MAX_PAYLOAD 1024 /* maximum payload size*/
@@ -61,9 +62,10 @@ void read_event(int sock)
     for (;;) {
         /* Read message from kernel */
         recvmsg(sock_fd, &msg, 0);
-        char *elf_len_data;
-        elf_len_data = NLMSG_DATA(nlh);
-        printf("Received payload size: %s\n", elf_len_data);
+        char *data_from_kernel;
+        data_from_kernel = NLMSG_DATA(nlh);
+	log_kernel_data(data_from_kernel);
+        printf("Received payload size: %s\n", data_from_kernel);
     }
 }
 

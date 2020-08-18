@@ -22,7 +22,7 @@ class CHMOD:
     PID = 3
 
 
-def main():
+def get_all_events():
     # TODO: Call the hook C module (usermode one) and check that it started correctly
 
     # data_path = '/tmp/data.csv'
@@ -33,9 +33,7 @@ def main():
 
     data_lines = data_to_lines(data)
 
-    ip = convert_ip_address(data_lines[0])
-
-    print(data_lines)
+    return data_lines
 
 
 def convert_ip_address(line):
@@ -53,7 +51,7 @@ def convert_ip_address(line):
         octets.append(int(f'0x{addr[i:i+2].decode()}', 16))
         i += 2
 
-    return f'{octets[0]}.{octets[1]}.{octets[2]}.{octets[3]}'
+    return f'{octets[0]}.{octets[1]}.{octets[2]}.{octets[3]}'.encode()
 
 
 def strip_data(data):
@@ -78,6 +76,9 @@ def data_to_lines(data):
         for field in strip_data(line).split(b','):
             split_line.append(strip_field_name(field))
 
+        if split_line[COMMAND] == CONNECT.NAME:
+            split_line[CONNECT.ADDRESS] = convert_ip_address(split_line)
+
         final_lines.append(split_line)
 
     return final_lines
@@ -86,7 +87,3 @@ def data_to_lines(data):
 def clear_data_file(data_path):
     # TODO: Fetch and clear every 5 minutes
     return data_path
-
-
-if __name__ == "__main__":
-    main()

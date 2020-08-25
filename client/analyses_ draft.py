@@ -1,5 +1,6 @@
 import sys
 import time
+import re
 
 from client.analyses_utils import parse_wget, get_commands_within_time_frame, write_log
 from client.notanav import get_all_events, CONNECT, EXECVE, COMMAND, TIME, clear_data_file
@@ -28,16 +29,20 @@ def main():
         event_list = get_all_events(USER_MODE_MODULE, DATA_PATH)
 
         identify_download_and_execute()
-
-        recon_events = get_events(event_list, RECON_COMMANDS)
-
+        
+        recon_sequences = []
         for event in recon_events:
-            print(event)
+            result = get_commands_within_time_frame(recon_events, EXECVE.NAME, event[4])
+            if result not in recon_sequences:
+                recon_sequences.append(get_commands_within_time_frame(recon_events, EXECVE.NAME, event[4]))
+        print(f"Found {len(recon_sequences)} reconnaissance sequences")
 
         domain_events = get_events(event_list, URL_IDENTIFIERS)
-
+        accessed_urls = set()
         for event in domain_events:
-            print(event)
+            domain = re.search(r"(http|https|smb|ftp)://[^ ]+", str(event)).group(0)
+            accessed_urls.add(domain)
+        print(f"Found {len(accessed_urls)} domains in command lines: f{accessed_urls}")
 
         time.sleep(1 * 60)
 

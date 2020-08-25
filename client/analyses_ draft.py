@@ -1,5 +1,4 @@
 import sys
-import re
 import time
 import subprocess
 
@@ -38,6 +37,9 @@ def main():
 
             for event in recon_events:
                 result = get_commands_within_time_frame(recon_events, EXECVE.NAME, event[TIME])
+
+                if len(result) < 3:
+                    continue
 
                 if result not in recon_sequences:
                     recon_sequences.append(result)

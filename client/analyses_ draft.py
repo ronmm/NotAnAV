@@ -1,4 +1,5 @@
 import sys
+import re
 import time
 import subprocess
 
@@ -27,37 +28,38 @@ def main():
     subprocess.Popen(USER_MODE_MODULE)
 
     while True:
-        event_list = get_all_events(DATA_PATH)
+        try:
+            event_list = get_all_events(DATA_PATH)
 
-        identify_download_and_execute(event_list)
+            identify_download_and_execute(event_list)
 
-        recon_sequences = []
-        recon_events = get_events(event_list, RECON_COMMANDS)
+            recon_sequences = []
+            recon_events = get_events(event_list, RECON_COMMANDS)
 
-        for event in recon_events:
-            result = get_commands_within_time_frame(recon_events, EXECVE.NAME, event[TIME])
+            for event in recon_events:
+                result = get_commands_within_time_frame(recon_events, EXECVE.NAME, event[TIME])
 
-            if result not in recon_sequences:
-                recon_sequences.append(result)
+                if result not in recon_sequences:
+                    recon_sequences.append(result)
 
-        if recon_sequences:
-            write_log(str(recon_sequences))
-            write_log("Found {} reconnaissance sequences".format(len(recon_sequences)))
-            print("Found {} reconnaissance sequences".format(len(recon_sequences)))
+            if recon_sequences:
+                write_log(str(recon_sequences) + "\r\n" + "Found {} reconnaissance sequences".format(len(recon_sequences)))
+                print("Found {} reconnaissance sequences".format(len(recon_sequences)))
 
-        domain_events = get_events(event_list, URL_IDENTIFIERS)
-        accessed_urls = set()
+            domain_events = get_events(event_list, URL_IDENTIFIERS)
+            accessed_urls = set()
 
-        for event in domain_events:
-            domain = re.search(r"(http|https|smb|ftp)://[^ ]+", str(event)).group(0)
-            accessed_urls.add(domain)
+            for event in domain_events:
+                domain = re.search(r"(http|https|smb|ftp)://[^ ]+", str(event)).group(0)
+                accessed_urls.add(domain)
 
-        if accessed_urls:
-            write_log(str(accessed_urls))
-            write_log("Found {} domains in command lines: {}".format(len(accessed_urls), accessed_urls))
-            print("Found {} domains in command lines: {}".format(len(accessed_urls), accessed_urls))
+            if accessed_urls:
+                write_log(str(accessed_urls) + "\r\n" + "Found {} domains in command lines: {}".format(len(accessed_urls), accessed_urls))
+                print("Found {} domains in command lines: {}".format(len(accessed_urls), accessed_urls))
 
-        time.sleep(1 * 60)
+            time.sleep(1 * 60)
+        except Exception as e:
+            continue
 
 
 

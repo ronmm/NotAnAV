@@ -57,3 +57,4 @@ def write_log(log_line):
         log.write(log_line)
         log.write('\r\n')
         log.write("[!] END OF SUSPICIOUS ACTIVITY\r\n")
+        log.write('\r\n')

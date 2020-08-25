@@ -1,5 +1,6 @@
 import sys
 import time
+import subprocess
 
 from client.analyses_utils import parse_wget, get_commands_within_time_frame, write_log
 from client.notanav import get_all_events, CONNECT, EXECVE, COMMAND, TIME, clear_data_file
@@ -39,9 +40,10 @@ def main():
             if result not in recon_sequences:
                 recon_sequences.append(result)
 
-        write_log(str(recon_sequences))
-        write_log("Found {} reconnaissance sequences".format(len(recon_sequences)))
-        print("Found {} reconnaissance sequences".format(len(recon_sequences)))
+        if recon_sequences:
+            write_log(str(recon_sequences))
+            write_log("Found {} reconnaissance sequences".format(len(recon_sequences)))
+            print("Found {} reconnaissance sequences".format(len(recon_sequences)))
 
         domain_events = get_events(event_list, URL_IDENTIFIERS)
         accessed_urls = set()
@@ -50,9 +52,10 @@ def main():
             domain = re.search(r"(http|https|smb|ftp)://[^ ]+", str(event)).group(0)
             accessed_urls.add(domain)
 
-        write_log(str(accessed_urls))
-        write_log("Found {} domains in command lines: {}".format(len(accessed_urls), accessed_urls))
-        print("Found {} domains in command lines: {}".format(len(accessed_urls), accessed_urls))
+        if accessed_urls:
+            write_log(str(accessed_urls))
+            write_log("Found {} domains in command lines: {}".format(len(accessed_urls), accessed_urls))
+            print("Found {} domains in command lines: {}".format(len(accessed_urls), accessed_urls))
 
         time.sleep(1 * 60)
 

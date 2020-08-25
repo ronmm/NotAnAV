@@ -1,11 +1,12 @@
-# Constants
-from client.analyses_utils import parse_wget, get_commands_within_time_frame
-from client.notanav import get_all_events, CONNECT, EXECVE, COMMAND
+import sys
 
-DATA_PATH = r"C:\Users\Ron\Desktop\Final Project\data.csv"
+from client.analyses_utils import parse_wget, get_commands_within_time_frame, write_log
+from client.notanav import get_all_events, CONNECT, EXECVE, COMMAND, TIME, clear_data_file
+
 RECON_COMMANDS = [b'uname -a', b'netstat -noa', b'cat /etc/passwd', b'ps -fade', b'arp -a']
 URL_IDENTIFIERS = [b'http://', b'https://', b'ftp://', b'smb://']
-
+USER_MODE_MODULE = sys.argv[1]
+DATA_PATH = sys.argv[2]
 
 def get_events(event_list, event_commands):
     """
@@ -20,9 +21,12 @@ def get_events(event_list, event_commands):
     
 
 def main():
-
-    event_list = get_all_events()
+    clear_data_file(DATA_PATH)
+    event_list = get_all_events(USER_MODE_MODULE, DATA_PATH)
     recon_events = get_events(event_list, RECON_COMMANDS)
+
+    identify_download_and_execute()
+
     for event in recon_events:
         print(event)
 
@@ -30,11 +34,10 @@ def main():
     for event in domain_events:
         print(event)
 
-    identify_download_and_execute()
 
 
 def identify_download_and_execute():
-    all_events = get_all_events()
+    all_events = get_all_events(USER_MODE_MODULE, DATA_PATH)
     wget_commands = get_events(all_events, [b'wget'])
 
     if wget_commands:
@@ -42,10 +45,9 @@ def identify_download_and_execute():
             if command[COMMAND] != EXECVE.NAME:
                 pass
 
-            event_time = None
+            event_time = command[TIME]
             wget_address, wget_port, downloaded_file_name = parse_wget(command)
 
-            # TODO: Remove
             if wget_address == b'localhost':
                 wget_address = b'127.0.0.1'
 
@@ -64,9 +66,9 @@ def identify_download_and_execute():
                                   if downloaded_file_name in command[EXECVE.PATH]]
 
             if connect_commands and chmod_commands and execution_commands:
-                # TODO: Document an alert to the user
-                print(f"The pid {command[EXECVE.PID].decode()} downloaded '{downloaded_file_name.decode()}' "
-                      f"from {wget_address.decode()}:{wget_port.decode()} and executed it")
+                log = f"The pid {command[EXECVE.PID].decode()} downloaded '{downloaded_file_name.decode()}' "\
+                      f"from {wget_address.decode()}:{wget_port.decode()} and executed it"
+                write_log(log)
     
 
 if __name__ == '__main__':

@@ -1,4 +1,10 @@
+import os
+import subprocess
+import threading
+import time
+
 COMMAND = 0
+TIME = -1
 
 
 class CONNECT:
@@ -22,11 +28,9 @@ class CHMOD:
     PID = 3
 
 
-def get_all_events():
+def get_all_events(user_mode_module, data_path):
     # TODO: Call the hook C module (usermode one) and check that it started correctly
-
-    # data_path = '/tmp/data.csv'
-    data_path = './data.csv'  # TODO: Convert this to an environment variable
+    # subprocess.Popen(user_mode_module)
 
     with open(data_path, 'rb') as data_file:
         data = data_file.read()
@@ -59,7 +63,6 @@ def strip_data(data):
 
 
 def strip_field_name(field):
-    # TODO: Might create a problem when there's an equal sign in the EXECVE argv
     if b'=' in field:
         return field.split(b'=')[1]
 
@@ -85,5 +88,13 @@ def data_to_lines(data):
 
 
 def clear_data_file(data_path):
-    # TODO: Fetch and clear every 5 minutes
-    return data_path
+    t = threading.Thread(target=clear_data, args=(data_path,))
+    t.start()
+
+
+def clear_data(data_path):
+    while True:
+        time.sleep(5*60)
+
+        if os.path.exists(data_path):
+            os.remove(data_path)

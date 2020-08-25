@@ -30,7 +30,9 @@ class CHMOD:
 
 def get_all_events(user_mode_module, data_path):
     # TODO: Call the hook C module (usermode one) and check that it started correctly
-    # subprocess.Popen(user_mode_module)
+    subprocess.Popen(user_mode_module)
+
+    time.sleep(30)
 
     with open(data_path, 'rb') as data_file:
         data = data_file.read()
@@ -52,10 +54,10 @@ def convert_ip_address(line):
     i = 0
 
     for index in range(0,4):
-        octets.append(int(f'0x{addr[i:i+2].decode()}', 16))
+        octets.append(int('0x{}'.format(addr[i:i+2].decode()), 16))
         i += 2
 
-    return f'{octets[0]}.{octets[1]}.{octets[2]}.{octets[3]}'.encode()
+    return '{}.{}.{}.{}'.format(octets[0], octets[1], octets[2], octets[3]).encode()
 
 
 def strip_data(data):

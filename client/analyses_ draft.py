@@ -1,4 +1,5 @@
 import sys
+import time
 
 from client.analyses_utils import parse_wget, get_commands_within_time_frame, write_log
 from client.notanav import get_all_events, CONNECT, EXECVE, COMMAND, TIME, clear_data_file
@@ -22,17 +23,23 @@ def get_events(event_list, event_commands):
 
 def main():
     clear_data_file(DATA_PATH)
-    event_list = get_all_events(USER_MODE_MODULE, DATA_PATH)
-    recon_events = get_events(event_list, RECON_COMMANDS)
 
-    identify_download_and_execute()
+    while True:
+        event_list = get_all_events(USER_MODE_MODULE, DATA_PATH)
 
-    for event in recon_events:
-        print(event)
+        identify_download_and_execute()
 
-    domain_events = get_events(event_list, URL_IDENTIFIERS)
-    for event in domain_events:
-        print(event)
+        recon_events = get_events(event_list, RECON_COMMANDS)
+
+        for event in recon_events:
+            print(event)
+
+        domain_events = get_events(event_list, URL_IDENTIFIERS)
+
+        for event in domain_events:
+            print(event)
+
+        time.sleep(1 * 60)
 
 
 
@@ -66,9 +73,9 @@ def identify_download_and_execute():
                                   if downloaded_file_name in command[EXECVE.PATH]]
 
             if connect_commands and chmod_commands and execution_commands:
-                log = f"The pid {command[EXECVE.PID].decode()} downloaded '{downloaded_file_name.decode()}' "\
-                      f"from {wget_address.decode()}:{wget_port.decode()} and executed it"
+                log = "The pid {} downloaded '{}' from {}:{} and executed it".format(command[EXECVE.PID].decode(), downloaded_file_name.decode(), wget_address.decode(), wget_port.decode())
                 write_log(log)
+                print(log)
     
 
 if __name__ == '__main__':

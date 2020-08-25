@@ -1,5 +1,6 @@
 from time import sleep
 import socket
+import sys
 
 def get_bitcoins():
 	'''
@@ -7,10 +8,12 @@ def get_bitcoins():
 	'''
 	return True
 
+c2 = sys.argv[1]
+
 while True:
 	try:
 		s = socket.socket()
-		s.connect(('www.malicious-bitcoin-miner.com', 80))
+		s.connect((c2, 80))
 		print('Mining started...')
 		get_bitcoins()
 		break

@@ -53,5 +53,7 @@ def write_log(log_line):
     log_path = '/tmp/notAnAV.log'
 
     with open(log_path, 'a+') as log:
+        log.write("[!] SUSPICIOUS ACTIVITY:\r\n")
         log.write(log_line)
         log.write('\r\n')
+        log.write("[!] END OF SUSPICIOUS ACTIVITY\r\n")

@@ -1,5 +1,4 @@
 import os
-import subprocess
 import threading
 import time
 
@@ -28,11 +27,9 @@ class CHMOD:
     PID = 3
 
 
-def get_all_events(user_mode_module, data_path):
-    # TODO: Call the hook C module (usermode one) and check that it started correctly
-    subprocess.Popen(user_mode_module)
-
-    time.sleep(30)
+def get_all_events(data_path):
+    if not os.path.exists(data_path):
+        return []
 
     with open(data_path, 'rb') as data_file:
         data = data_file.read()

@@ -1,6 +1,5 @@
 import sys
 import time
-import re
 
 from client.analyses_utils import parse_wget, get_commands_within_time_frame, write_log
 from client.notanav import get_all_events, CONNECT, EXECVE, COMMAND, TIME, clear_data_file
@@ -24,32 +23,42 @@ def get_events(event_list, event_commands):
 
 def main():
     clear_data_file(DATA_PATH)
+    subprocess.Popen(USER_MODE_MODULE)
 
     while True:
-        event_list = get_all_events(USER_MODE_MODULE, DATA_PATH)
+        event_list = get_all_events(DATA_PATH)
 
-        identify_download_and_execute()
-        
+        identify_download_and_execute(event_list)
+
         recon_sequences = []
+        recon_events = get_events(event_list, RECON_COMMANDS)
+
         for event in recon_events:
-            result = get_commands_within_time_frame(recon_events, EXECVE.NAME, event[4])
+            result = get_commands_within_time_frame(recon_events, EXECVE.NAME, event[TIME])
+
             if result not in recon_sequences:
-                recon_sequences.append(get_commands_within_time_frame(recon_events, EXECVE.NAME, event[4]))
-        print(f"Found {len(recon_sequences)} reconnaissance sequences")
+                recon_sequences.append(result)
+
+        write_log(str(recon_sequences))
+        write_log("Found {} reconnaissance sequences".format(len(recon_sequences)))
+        print("Found {} reconnaissance sequences".format(len(recon_sequences)))
 
         domain_events = get_events(event_list, URL_IDENTIFIERS)
         accessed_urls = set()
+
         for event in domain_events:
             domain = re.search(r"(http|https|smb|ftp)://[^ ]+", str(event)).group(0)
             accessed_urls.add(domain)
-        print(f"Found {len(accessed_urls)} domains in command lines: f{accessed_urls}")
+
+        write_log(str(accessed_urls))
+        write_log("Found {} domains in command lines: {}".format(len(accessed_urls), accessed_urls))
+        print("Found {} domains in command lines: {}".format(len(accessed_urls), accessed_urls))
 
         time.sleep(1 * 60)
 
 
 
-def identify_download_and_execute():
-    all_events = get_all_events(USER_MODE_MODULE, DATA_PATH)
+def identify_download_and_execute(all_events):
     wget_commands = get_events(all_events, [b'wget'])
 
     if wget_commands:
